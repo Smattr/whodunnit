@@ -33,10 +33,23 @@ void debug_msg(int signum, siginfo_t *si, ucontext_t *context) {
 void init(void) __attribute__((constructor));
 void init(void) {
 
+    int pagesize = getpagesize();
+
+    /* Setup a new stack. */
+    void *st;
+    posix_memalign(&st, pagesize, pagesize);
+    mprotect(st, pagesize, 7); // set no-execute
+    stack_t s = {
+        .ss_sp = st,
+        .ss_flags = 0,
+        .ss_size = pagesize,
+    };
+    sigaltstack(&s, NULL);
+
     /* Install a signal handler for division by zero. */
     struct sigaction sa = {
         .sa_sigaction = debug_msg,
-        .sa_flags = SA_SIGINFO,
+        .sa_flags = SA_SIGINFO|SA_ONSTACK,
     };
     sigaction(SIGFPE, &sa, NULL);
     sigaction(SIGSEGV, &sa, NULL); //FIXME: will print division error on fail...
