@@ -39,5 +39,6 @@ void init(void) {
         .sa_flags = SA_SIGINFO,
     };
     sigaction(SIGFPE, &sa, NULL);
+    sigaction(SIGSEGV, &sa, NULL); //FIXME: will print division error on fail...
 
 }
